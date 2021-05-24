@@ -24,11 +24,11 @@ This file defines a agent using [Double DQN](https://arxiv.org/abs/1509.06461) t
 <img width="500" alt="Screen_Shot_2020-06-03_at_2 37 00_PM_30SiARt" src="https://user-images.githubusercontent.com/35868876/119313289-f4f11c80-bca5-11eb-9738-a54bf7d28fce.png">
 
 ### Result
-The agent using the double DQN only able to solve the environment in 438 episodes.
-`Environment solved in 438 episodes!	Average Score: 13.04`
+The agent using the double DQN only able to solve the environment in 533 episodes.
+`Environment solved in 533 episodes!	Average Score: 13.00`
 
-while the agent using Double DQN together with Prioritized experience replay solve it in 685 episodes.
-`Environment solved in 685 episodes! Average Score: 13.02`
+while the agent using Double DQN together with Prioritized experience replay solve it in 662 episodes.
+`Environment solved in 662 episodes!	Average Score: 13.01`
 
 ![Screenshot from 2021-05-24 15-50-50](https://user-images.githubusercontent.com/35868876/119314902-d68c2080-bca7-11eb-9d96-9d7c36d7be0b.png)
 
