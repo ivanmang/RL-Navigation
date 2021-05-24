@@ -23,7 +23,9 @@ The environment is solved when the agent get an average score of +13 over 100 co
 ### Getting Started
 If you are Linux users, the environment `Banana_Linux` is provided and you don't need to download the environment again. Or else you are require to follow these instructions:
 
-1. Download the environment from one of the links below.  You need only select the environment that matches your operating system:
+1. To set up your python environment, please follow the instruction here: https://github.com/udacity/deep-reinforcement-learning#dependencies
+
+2. Download the environment from one of the links below.  You need only select the environment that matches your operating system:
     - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux.zip)
     - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana.app.zip)
     - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86.zip)
@@ -33,7 +35,7 @@ If you are Linux users, the environment `Banana_Linux` is provided and you don't
 
     (_For AWS_) If you'd like to train the agent on AWS (and have not [enabled a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md)), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux_NoVis.zip) to obtain the environment.
 
-2. Place the file in the DRLND GitHub repository, in the folder that is the same as the `Navigation.ipynb`, and unzip (or decompress) the file. Change the path that reads the unity environment in `Navigation.ipynb`.
+3. Place the file in the DRLND GitHub repository, in the folder that is the same as the `Navigation.ipynb`, and unzip (or decompress) the file. Change the path that reads the unity environment in `Navigation.ipynb`.
 
 ### Instructions
 
