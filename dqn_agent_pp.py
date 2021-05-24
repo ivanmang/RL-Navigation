@@ -14,10 +14,12 @@ GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR = 5e-4               # learning rate 
 UPDATE_EVERY = 4        # how often to update the network
+ALPHA = 0.3
+BETA = 0.4
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class Agent():
+class AgentP():
     """Interacts with and learns from the environment."""
 
     def __init__(self, state_size, action_size, seed):
@@ -44,9 +46,8 @@ class Agent():
         self.t_step = 0
     
     def step(self, state, action, reward, next_state, done):
-        priority = 0
         # Save experience in replay memory
-        self.memory.add(state, action, reward, next_state, done, priority)
+        self.memory.add(state, action, reward, next_state, done)
         
         # Learn every UPDATE_EVERY time steps.
         self.t_step = (self.t_step + 1) % UPDATE_EVERY
@@ -78,28 +79,35 @@ class Agent():
 
     def learn(self, experiences, gamma):
         """Update value parameters using given batch of experience tuples.
+
         Params
         ======
             experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples 
             gamma (float): discount factor
         """
-        states, actions, rewards, next_states, dones, priority = experiences
+        states, actions, rewards, next_states, dones, weights, indices = experiences
 
         # Find max actions for next states based on the local_network
         local_argmax_actions = self.qnetwork_local(next_states).detach().argmax(dim=1).unsqueeze(1)
         # Get max predicted Q values (for next states) from target model
         Q_targets_next = self.qnetwork_target(next_states).gather(1,local_argmax_actions).detach()
+
         # Compute Q targets for current states 
         Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
 
         # Get expected Q values from local model
         Q_expected = self.qnetwork_local(states).gather(1, actions)
+        
 
         # Compute loss
-        loss = F.mse_loss(Q_expected, Q_targets)
+        weights    = torch.from_numpy(np.vstack(weights)).float().to(device)
+        loss = ((Q_targets - Q_expected)**2) * weights
+        prios = loss + 1e-5
+        loss  = loss.mean()
         # Minimize the loss
         self.optimizer.zero_grad()
         loss.backward()
+        self.memory.update(indices, abs(prios))
         self.optimizer.step()
 
         # ------------------- update target network ------------------- #
@@ -108,6 +116,7 @@ class Agent():
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
         θ_target = τ*θ_local + (1 - τ)*θ_target
+
         Params
         ======
             local_model (PyTorch model): weights will be copied from
@@ -123,6 +132,7 @@ class ReplayBuffer:
 
     def __init__(self, action_size, buffer_size, batch_size, seed):
         """Initialize a ReplayBuffer object.
+
         Params
         ======
             action_size (int): dimension of each action
@@ -131,27 +141,53 @@ class ReplayBuffer:
             seed (int): random seed
         """
         self.action_size = action_size
-        self.memory = deque(maxlen=buffer_size)  
+        #self.memory = deque(maxlen=buffer_size)  
+        self.memory = []
         self.batch_size = batch_size
-        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done", "priority"])
+        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
+        self.priorities = np.zeros(BUFFER_SIZE)
+        self.pos        = 0
     
-    def add(self, state, action, reward, next_state, done, priority):
+    def add(self, state, action, reward, next_state, done):
+        max_prio = self.priorities.max() if self.memory else 1.0
+
         """Add a new experience to memory."""
-        e = self.experience(state, action, reward, next_state, done, priority)
-        self.memory.append(e)
-    
+        e = self.experience(state, action, reward, next_state, done)
+        if len(self.memory) < BUFFER_SIZE:
+            self.memory.append(e)
+        else:
+            self.memory[self.pos] = e
+        self.priorities[self.pos] = max_prio
+        self.pos = (self.pos + 1) % BUFFER_SIZE
+        
+    def update(self,batch_indices, batch_priorities):
+        for idx, prio in zip(batch_indices, batch_priorities):
+            self.priorities[idx] = prio
+            
     def sample(self):
         """Randomly sample a batch of experiences from memory."""
-        experiences = random.sample(self.memory, k=self.batch_size)
+        if len(self.memory) == BUFFER_SIZE:
+            prios = self.priorities
+        else:
+            prios = self.priorities[:self.pos]
+        probs  = prios ** ALPHA
+        probs /= probs.sum()
+        indices = np.random.choice(len(self.memory), self.batch_size, p=probs)
+
+        experiences = [self.memory[idx] for idx in indices]
+        
+        total    = len(self.memory)
+        weights  = (total * probs[indices]) ** (-BETA)
+        weights /= weights.max()
+        weights  = np.array(weights)
 
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
         actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
         rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
         next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
         dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
-        priorities = torch.from_numpy(np.vstack([e.priority for e in experiences if e is not None])).float().to(device)
-        return (states, actions, rewards, next_states, dones, priorities)
+        return (states, actions, rewards, next_states, dones, weights, indices)
 
     def __len__(self):
         """Return the current size of internal memory."""
