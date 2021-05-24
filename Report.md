@@ -30,7 +30,8 @@ The agent using the double DQN only able to solve the environment in 533 episode
 while the agent using Double DQN together with Prioritized experience replay solve it in 662 episodes.
 `Environment solved in 662 episodes!	Average Score: 13.01`
 
-![Screenshot from 2021-05-24 15-50-50](https://user-images.githubusercontent.com/35868876/119314902-d68c2080-bca7-11eb-9d96-9d7c36d7be0b.png)
+![Screenshot from 2021-05-24 20-14-00](https://user-images.githubusercontent.com/35868876/119346291-9c814580-bccc-11eb-8eb9-f65d20491c20.png)
+
 
 The blue line represent agent using the double DQN, while the other is represented in orange. We can see that the first agent have a better performance.
 
